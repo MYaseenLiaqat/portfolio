@@ -91,6 +91,17 @@
   var clearFilterBtn = document.getElementById("clear-filter");
   var activeChip = null;
 
+  var CAT_COLORS = {
+    ml: "#1f6f78",
+    lang: "#3b5bdb",
+    frontend: "#c2255c",
+    backend: "#2f9e44",
+    db: "#7048c9",
+    cloud: "#1971c2",
+    viz: "#c97a2b",
+    tools: "#0c8599"
+  };
+
   function clearFilter() {
     if (activeChip) activeChip.classList.remove("is-active");
     activeChip = null;
@@ -98,6 +109,7 @@
       card.classList.remove("is-dim", "is-match");
     });
     filterBar.classList.remove("is-active");
+    document.documentElement.style.removeProperty("--active-cat");
   }
 
   function applyFilter(skill, label) {
@@ -141,6 +153,15 @@
       if (activeChip) activeChip.classList.remove("is-active");
       chip.classList.add("is-active");
       activeChip = chip;
+
+      var group = chip.closest(".skill-group");
+      var cat = group ? group.getAttribute("data-cat") : null;
+      if (cat && CAT_COLORS[cat]) {
+        document.documentElement.style.setProperty("--active-cat", CAT_COLORS[cat]);
+      } else {
+        document.documentElement.style.removeProperty("--active-cat");
+      }
+
       applyFilter(skill, label);
     });
   });
