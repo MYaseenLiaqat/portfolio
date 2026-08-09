@@ -169,4 +169,81 @@
   if (clearFilterBtn) {
     clearFilterBtn.addEventListener("click", clearFilter);
   }
+
+  /* ---------- Scroll progress bar ---------- */
+  var progressFill = document.getElementById("nav-progress-fill");
+  function updateProgress() {
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    if (progressFill) progressFill.style.width = pct + "%";
+  }
+
+  /* ---------- Active nav-link highlighting ---------- */
+  var navLinks = document.querySelectorAll(".nav-links a[href^='#']");
+  var trackedSections = [];
+  navLinks.forEach(function (link) {
+    var id = link.getAttribute("href").slice(1);
+    var section = document.getElementById(id);
+    if (section) trackedSections.push({ link: link, section: section });
+  });
+
+  function updateActiveNav() {
+    var scrollPos = window.scrollY + window.innerHeight * 0.3;
+    var current = null;
+    trackedSections.forEach(function (item) {
+      if (item.section.offsetTop <= scrollPos) current = item;
+    });
+    trackedSections.forEach(function (item) {
+      item.link.classList.toggle("is-active", item === current);
+    });
+  }
+
+  /* ---------- Hero parallax ---------- */
+  var parallaxEls = document.querySelectorAll("[data-parallax]");
+
+  var ticking = false;
+  function onScroll() {
+    if (!ticking) {
+      window.requestAnimationFrame(function () {
+        updateProgress();
+        updateActiveNav();
+        if (!prefersReduced) {
+          var y = window.scrollY;
+          parallaxEls.forEach(function (el) {
+            var speed = parseFloat(el.getAttribute("data-parallax")) || 0;
+            el.style.transform = "translate3d(0," + (y * speed) + "px,0)";
+          });
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- Project card spotlight (hover) + tap glow (touch) ---------- */
+  var cards = document.querySelectorAll(".project-card");
+  cards.forEach(function (card) {
+    card.addEventListener("mousemove", function (e) {
+      var rect = card.getBoundingClientRect();
+      var mx = ((e.clientX - rect.left) / rect.width) * 100;
+      var my = ((e.clientY - rect.top) / rect.height) * 100;
+      card.style.setProperty("--mx", mx + "%");
+      card.style.setProperty("--my", my + "%");
+    });
+
+    card.addEventListener(
+      "touchstart",
+      function () {
+        cards.forEach(function (c) { c.classList.remove("is-touched"); });
+        card.style.setProperty("--mx", "50%");
+        card.style.setProperty("--my", "35%");
+        card.classList.add("is-touched");
+        window.setTimeout(function () { card.classList.remove("is-touched"); }, 900);
+      },
+      { passive: true }
+    );
+  });
 })();
