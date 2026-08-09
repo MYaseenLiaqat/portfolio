@@ -1,7 +1,7 @@
 (function () {
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- Scroll reveal ---------- */
+  /* ---------- Scroll reveal (replays every time an element enters view) ---------- */
   var revealItems = document.querySelectorAll(".reveal, .reveal-drop, .reveal-left, .reveal-right, .reveal-zoom");
   if (prefersReduced || !("IntersectionObserver" in window)) {
     revealItems.forEach(function (el) { el.classList.add("is-visible"); });
@@ -9,10 +9,7 @@
     var revealObserver = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            revealObserver.unobserve(entry.target);
-          }
+          entry.target.classList.toggle("is-visible", entry.isIntersecting);
         });
       },
       { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
@@ -20,7 +17,7 @@
     revealItems.forEach(function (el) { revealObserver.observe(el); });
   }
 
-  /* ---------- Schema card: terminal-style typing ---------- */
+  /* ---------- Schema card: terminal-style typing (replays every entry) ---------- */
   var schemaCard = document.getElementById("schema-card");
   if (schemaCard) {
     var schemaValEls = schemaCard.querySelectorAll(".schema-val");
@@ -30,19 +27,32 @@
       if (!prefersReduced) el.textContent = "";
     });
 
+    var schemaTimers = [];
+    function clearSchemaTimers() {
+      schemaTimers.forEach(function (id) {
+        window.clearTimeout(id);
+        window.clearInterval(id);
+      });
+      schemaTimers = [];
+    }
+
     function typeSchemaRows() {
       if (prefersReduced) return;
+      clearSchemaTimers();
+      schemaValEls.forEach(function (el) { el.textContent = ""; });
       var rowDelay = 0;
       schemaValEls.forEach(function (el, idx) {
         var fullText = schemaOriginals[idx];
-        window.setTimeout(function () {
+        var startId = window.setTimeout(function () {
           var i = 0;
           var iv = window.setInterval(function () {
             el.textContent = fullText.slice(0, i + 1);
             i++;
             if (i >= fullText.length) window.clearInterval(iv);
           }, 14);
+          schemaTimers.push(iv);
         }, rowDelay);
+        schemaTimers.push(startId);
         rowDelay += 180 + fullText.length * 6;
       });
     }
@@ -53,10 +63,12 @@
       var schemaObserver = new IntersectionObserver(
         function (entries) {
           entries.forEach(function (entry) {
+            schemaCard.classList.toggle("is-visible", entry.isIntersecting);
             if (entry.isIntersecting) {
-              entry.target.classList.add("is-visible");
               typeSchemaRows();
-              schemaObserver.unobserve(entry.target);
+            } else {
+              clearSchemaTimers();
+              schemaValEls.forEach(function (el) { el.textContent = ""; });
             }
           });
         },
@@ -105,8 +117,9 @@
     }
   }
 
-  /* ---------- Animated stat counters ---------- */
+  /* ---------- Animated stat counters (replay every entry) ---------- */
   var counters = document.querySelectorAll("[data-count-to]");
+  var counterRunIds = new WeakMap();
   function animateCounter(el) {
     var target = parseFloat(el.getAttribute("data-count-to"));
     var decimals = parseInt(el.getAttribute("data-decimals") || "0", 10);
@@ -115,9 +128,12 @@
       el.textContent = target.toFixed(decimals) + suffix;
       return;
     }
+    var runId = {};
+    counterRunIds.set(el, runId);
     var duration = 900;
     var start = null;
     function step(ts) {
+      if (counterRunIds.get(el) !== runId) return; // a newer run superseded this one
       if (start === null) start = ts;
       var progress = Math.min((ts - start) / duration, 1);
       var eased = 1 - Math.pow(1 - progress, 3); // ease-out-cubic
@@ -136,7 +152,10 @@
           entries.forEach(function (entry) {
             if (entry.isIntersecting) {
               animateCounter(entry.target);
-              counterObserver.unobserve(entry.target);
+            } else if (!prefersReduced) {
+              var decimals = parseInt(entry.target.getAttribute("data-decimals") || "0", 10);
+              var suffix = entry.target.getAttribute("data-suffix") || "";
+              entry.target.textContent = (0).toFixed(decimals) + suffix;
             }
           });
         },
