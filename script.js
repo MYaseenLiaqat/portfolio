@@ -20,9 +20,33 @@
     revealItems.forEach(function (el) { revealObserver.observe(el); });
   }
 
-  /* ---------- Schema card stagger (triggers row-by-row transition) ---------- */
+  /* ---------- Schema card: terminal-style typing ---------- */
   var schemaCard = document.getElementById("schema-card");
   if (schemaCard) {
+    var schemaValEls = schemaCard.querySelectorAll(".schema-val");
+    var schemaOriginals = [];
+    schemaValEls.forEach(function (el) {
+      schemaOriginals.push(el.textContent);
+      if (!prefersReduced) el.textContent = "";
+    });
+
+    function typeSchemaRows() {
+      if (prefersReduced) return;
+      var rowDelay = 0;
+      schemaValEls.forEach(function (el, idx) {
+        var fullText = schemaOriginals[idx];
+        window.setTimeout(function () {
+          var i = 0;
+          var iv = window.setInterval(function () {
+            el.textContent = fullText.slice(0, i + 1);
+            i++;
+            if (i >= fullText.length) window.clearInterval(iv);
+          }, 14);
+        }, rowDelay);
+        rowDelay += 180 + fullText.length * 6;
+      });
+    }
+
     if (prefersReduced || !("IntersectionObserver" in window)) {
       schemaCard.classList.add("is-visible");
     } else {
@@ -31,6 +55,7 @@
           entries.forEach(function (entry) {
             if (entry.isIntersecting) {
               entry.target.classList.add("is-visible");
+              typeSchemaRows();
               schemaObserver.unobserve(entry.target);
             }
           });
@@ -38,6 +63,45 @@
         { threshold: 0.3 }
       );
       schemaObserver.observe(schemaCard);
+    }
+  }
+
+  /* ---------- Hero role-rotator (typewriter) ---------- */
+  var roleTextEl = document.getElementById("role-rotator-text");
+  var ROLES = ["Software Engineer", "Machine Learning Engineer", "Data Scientist", "AI Application Builder"];
+  if (roleTextEl) {
+    if (prefersReduced) {
+      roleTextEl.textContent = ROLES[0];
+    } else {
+      (function typewriterLoop() {
+        var roleIdx = 0;
+        function typeRole() {
+          var word = ROLES[roleIdx];
+          var i = 0;
+          var typeIv = window.setInterval(function () {
+            roleTextEl.textContent = word.slice(0, i + 1);
+            i++;
+            if (i >= word.length) {
+              window.clearInterval(typeIv);
+              window.setTimeout(eraseRole, 1400);
+            }
+          }, 55);
+        }
+        function eraseRole() {
+          var word = ROLES[roleIdx];
+          var i = word.length;
+          var eraseIv = window.setInterval(function () {
+            roleTextEl.textContent = word.slice(0, i - 1);
+            i--;
+            if (i <= 0) {
+              window.clearInterval(eraseIv);
+              roleIdx = (roleIdx + 1) % ROLES.length;
+              window.setTimeout(typeRole, 250);
+            }
+          }, 30);
+        }
+        typeRole();
+      })();
     }
   }
 
@@ -199,8 +263,27 @@
     });
   }
 
-  /* ---------- Hero parallax ---------- */
+  /* ---------- Hero parallax + continuous float ---------- */
   var parallaxEls = document.querySelectorAll("[data-parallax]");
+  var startTime = performance.now();
+
+  function floatLoop(now) {
+    if (!prefersReduced) {
+      var elapsed = (now - startTime) / 1000;
+      var y = window.scrollY;
+      parallaxEls.forEach(function (el, i) {
+        var speed = parseFloat(el.getAttribute("data-parallax")) || 0;
+        var bobAmp = 14;
+        var bobSpeed = 0.35 + i * 0.08;
+        var bobOffsetX = Math.sin(elapsed * bobSpeed) * bobAmp;
+        var bobOffsetY = Math.cos(elapsed * bobSpeed * 0.8) * bobAmp;
+        el.style.transform =
+          "translate3d(" + bobOffsetX + "px," + (y * speed + bobOffsetY) + "px,0)";
+      });
+    }
+    window.requestAnimationFrame(floatLoop);
+  }
+  if (parallaxEls.length) window.requestAnimationFrame(floatLoop);
 
   var ticking = false;
   function onScroll() {
@@ -208,13 +291,6 @@
       window.requestAnimationFrame(function () {
         updateProgress();
         updateActiveNav();
-        if (!prefersReduced) {
-          var y = window.scrollY;
-          parallaxEls.forEach(function (el) {
-            var speed = parseFloat(el.getAttribute("data-parallax")) || 0;
-            el.style.transform = "translate3d(0," + (y * speed) + "px,0)";
-          });
-        }
         ticking = false;
       });
       ticking = true;
@@ -222,6 +298,27 @@
   }
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
+
+  /* ---------- 3D tilt (project cards + skill groups) ---------- */
+  function attachTilt(el, maxDeg) {
+    if (prefersReduced) return;
+    el.addEventListener("mousemove", function (e) {
+      var rect = el.getBoundingClientRect();
+      var px = (e.clientX - rect.left) / rect.width;
+      var py = (e.clientY - rect.top) / rect.height;
+      var rx = (0.5 - py) * maxDeg;
+      var ry = (px - 0.5) * maxDeg;
+      el.classList.add("is-tilting");
+      el.style.transform =
+        "perspective(1000px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) scale3d(1.015,1.015,1.015)";
+    });
+    el.addEventListener("mouseleave", function () {
+      el.classList.remove("is-tilting");
+      el.style.transform = "";
+    });
+  }
+  document.querySelectorAll(".project-card").forEach(function (el) { attachTilt(el, 9); });
+  document.querySelectorAll(".skill-group").forEach(function (el) { attachTilt(el, 6); });
 
   /* ---------- Project card spotlight (hover) + tap glow (touch) ---------- */
   var cards = document.querySelectorAll(".project-card");
