@@ -2,7 +2,7 @@
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- Scroll reveal ---------- */
-  var revealItems = document.querySelectorAll(".reveal");
+  var revealItems = document.querySelectorAll(".reveal, .reveal-drop, .reveal-left, .reveal-right, .reveal-zoom");
   if (prefersReduced || !("IntersectionObserver" in window)) {
     revealItems.forEach(function (el) { el.classList.add("is-visible"); });
   } else {

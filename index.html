@@ -44,7 +44,7 @@
     <div class="hero-blob hero-blob-a" data-parallax="0.12"></div>
     <div class="hero-blob hero-blob-b" data-parallax="-0.08"></div>
     <div class="wrap hero-grid">
-      <div>
+      <div class="reveal-left">
         <span class="eyebrow">Available for data science &amp; ML roles</span>
         <h1>Muhammad Yaseen<br>Liaqat</h1>
         <p class="lede">Software Engineer who builds machine learning models, data pipelines, and AI-powered applications — backed by production experience shipping backend systems and APIs.</p>
@@ -59,7 +59,7 @@
         </div>
       </div>
 
-      <div class="schema-card reveal" id="schema-card">
+      <div class="schema-card reveal-right" id="schema-card">
         <div class="schema-title"><span>schema: profile</span><span>.info()</span></div>
         <div class="schema-row"><span class="schema-key">role</span><span class="schema-type">str</span><span class="schema-val">"Software Engineer — AI/ML"</span></div>
         <div class="schema-row"><span class="schema-key">languages</span><span class="schema-type">list</span><span class="schema-val">Python · C# · SQL · JS/TS</span></div>
@@ -75,13 +75,13 @@
   <!-- ABOUT -->
   <section id="about">
     <div class="wrap about-grid">
-      <div class="reveal">
+      <div class="reveal-left">
         <span class="eyebrow">About</span>
         <h2 style="margin-top:16px; margin-bottom:22px; font-size:clamp(26px,3vw,34px);">From production software to applied machine learning.</h2>
         <p>I'm a Computer Science graduate (BS, The University of Lahore) and Software Engineer with close to two years of experience building backend systems, REST APIs, and cloud-based applications in Python and .NET. Over the last year I've moved deliberately into machine learning and AI — training and tuning classification models, building ETL pipelines on Google Cloud, and shipping LLM-based applications using LangChain and retrieval-augmented generation.</p>
         <p>What I bring to a data science team isn't just modeling — it's the ability to take a model from a notebook to a working system: APIs, pipelines, and production deployment included.</p>
       </div>
-      <ul class="fact-list reveal">
+      <ul class="fact-list reveal-right">
         <li><span class="k">Based in</span><span class="v">Lahore, Pakistan</span></li>
         <li><span class="k">Currently</span><span class="v">Software Engineer, Mavericks United</span></li>
         <li><span class="k">Focus</span><span class="v">Machine Learning &amp; Data Science</span></li>
@@ -99,7 +99,7 @@
         <span class="section-index mono">02 — WORK</span>
       </div>
       <div class="timeline">
-        <div class="tl-item reveal">
+        <div class="tl-item reveal-left">
           <div class="tl-period mono">Jul 2025 — Present</div>
           <div>
             <div class="tl-role">Software Engineer</div>
@@ -111,7 +111,7 @@
             </ul>
           </div>
         </div>
-        <div class="tl-item reveal">
+        <div class="tl-item reveal-right">
           <div class="tl-period mono">May 2024 — Jun 2025</div>
           <div>
             <div class="tl-role">Associate Software Engineer</div>
@@ -139,7 +139,7 @@
       </div>
 
       <div class="skills-grid">
-        <div class="skill-group reveal" data-cat="ml">
+        <div class="skill-group reveal-zoom" data-cat="ml">
           <h3>Machine Learning &amp; AI</h3>
           <div class="chip-row">
             <button class="chip" data-skill="scikit-learn">Scikit-learn</button>
@@ -156,7 +156,7 @@
           </div>
         </div>
 
-        <div class="skill-group reveal" data-cat="lang">
+        <div class="skill-group reveal-zoom" data-cat="lang">
           <h3>Languages</h3>
           <div class="chip-row">
             <button class="chip" data-skill="python">Python</button>
@@ -168,7 +168,7 @@
           </div>
         </div>
 
-        <div class="skill-group reveal" data-cat="frontend">
+        <div class="skill-group reveal-zoom" data-cat="frontend">
           <h3>Frontend &amp; Mobile</h3>
           <div class="chip-row">
             <button class="chip" data-skill="reactjs">React.js</button>
@@ -178,7 +178,7 @@
           </div>
         </div>
 
-        <div class="skill-group reveal" data-cat="backend">
+        <div class="skill-group reveal-zoom" data-cat="backend">
           <h3>Backend</h3>
           <div class="chip-row">
             <button class="chip" data-skill="fastapi">FastAPI</button>
@@ -188,7 +188,7 @@
           </div>
         </div>
 
-        <div class="skill-group reveal" data-cat="db">
+        <div class="skill-group reveal-zoom" data-cat="db">
           <h3>Databases</h3>
           <div class="chip-row">
             <button class="chip" data-skill="postgresql">PostgreSQL</button>
@@ -199,7 +199,7 @@
           </div>
         </div>
 
-        <div class="skill-group reveal" data-cat="cloud">
+        <div class="skill-group reveal-zoom" data-cat="cloud">
           <h3>Cloud &amp; Data Engineering</h3>
           <div class="chip-row">
             <button class="chip" data-skill="gcp">Google Cloud Platform</button>
@@ -209,7 +209,7 @@
           </div>
         </div>
 
-        <div class="skill-group reveal" data-cat="viz">
+        <div class="skill-group reveal-zoom" data-cat="viz">
           <h3>Data Visualization &amp; BI</h3>
           <div class="chip-row">
             <button class="chip" data-skill="tableau">Tableau</button>
@@ -218,7 +218,7 @@
           </div>
         </div>
 
-        <div class="skill-group reveal" data-cat="tools">
+        <div class="skill-group reveal-zoom" data-cat="tools">
           <h3>Tools &amp; Practices</h3>
           <div class="chip-row">
             <button class="chip" data-skill="docker">Docker</button>
@@ -246,7 +246,7 @@
       </div>
       <div class="project-grid" id="project-grid">
 
-        <article class="project-card reveal" data-stack="flask,docker,firebase,rest-apis,python">
+        <article class="project-card reveal-drop" data-stack="flask,docker,firebase,rest-apis,python">
           <div class="project-meta">
             <span class="status-dot is-live">Live</span><span>01 · Production Backend</span>
           </div>
@@ -259,7 +259,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-stack="flutter,dart">
+        <article class="project-card reveal-drop" data-stack="flutter,dart">
           <div class="project-meta">
             <span class="status-dot is-live">Live</span><span>02 · Mobile App</span>
           </div>
@@ -272,7 +272,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-stack="tableau">
+        <article class="project-card reveal-drop" data-stack="tableau">
           <div class="project-meta">
             <span class="status-dot is-live">Live</span><span>03 · BI / Visualization</span>
           </div>
@@ -284,7 +284,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-stack="nextjs,supabase,javascript,groq,llamaindex">
+        <article class="project-card reveal-drop" data-stack="nextjs,supabase,javascript,groq,llamaindex">
           <div class="project-meta">
             <span class="status-dot">Code</span><span>04 · Full-Stack + AI</span>
           </div>
@@ -296,7 +296,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-stack="langchain,rag,chromadb,sentence-transformers,prompt-engineering,python">
+        <article class="project-card reveal-drop" data-stack="langchain,rag,chromadb,sentence-transformers,prompt-engineering,python">
           <div class="project-meta">
             <span class="status-dot">Code</span><span>05 · AI Application</span>
           </div>
@@ -308,7 +308,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-stack="scikit-learn,python,hyperparameter-tuning,feature-engineering">
+        <article class="project-card reveal-drop" data-stack="scikit-learn,python,hyperparameter-tuning,feature-engineering">
           <div class="project-meta">
             <span class="status-dot">Code</span><span>06 · Machine Learning</span>
           </div>
@@ -320,7 +320,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-stack="bigquery,sql,gcp">
+        <article class="project-card reveal-drop" data-stack="bigquery,sql,gcp">
           <div class="project-meta">
             <span class="status-dot">Code</span><span>07 · ML on Cloud</span>
           </div>
@@ -332,7 +332,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-stack="python,pandas-numpy">
+        <article class="project-card reveal-drop" data-stack="python,pandas-numpy">
           <div class="project-meta">
             <span class="status-dot">Code</span><span>08 · Data Analysis</span>
           </div>
@@ -344,7 +344,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-stack="gcp,dataflow,etl-pipelines">
+        <article class="project-card reveal-drop" data-stack="gcp,dataflow,etl-pipelines">
           <div class="project-meta">
             <span class="status-dot">Code</span><span>09 · Data Engineering</span>
           </div>
@@ -356,7 +356,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-stack="power-bi,dax">
+        <article class="project-card reveal-drop" data-stack="power-bi,dax">
           <div class="project-meta">
             <span class="status-dot">Code</span><span>10 · BI / Visualization</span>
           </div>
@@ -375,7 +375,7 @@
   <!-- EDUCATION / CERTS -->
   <section id="education">
     <div class="wrap edu-grid">
-      <div class="reveal">
+      <div class="reveal-left">
         <div class="section-head" style="margin-bottom:24px;">
           <h2 style="font-size:24px;">Education &amp; Honors</h2>
         </div>
@@ -394,7 +394,7 @@
           </li>
         </ul>
       </div>
-      <div class="reveal">
+      <div class="reveal-right">
         <div class="section-head" style="margin-bottom:24px;">
           <h2 style="font-size:24px;">Certifications</h2>
         </div>
@@ -423,7 +423,7 @@
         <h2>Writing</h2>
         <span class="section-index mono">05 — NOTES</span>
       </div>
-      <a class="write-card reveal" href="https://medium.com/@yaseenliaqat96/beyond-answers-rethinking-learning-in-the-age-of-artificial-intelligence-31289c2e0f90" target="_blank" rel="noopener">
+      <a class="write-card reveal-zoom" href="https://medium.com/@yaseenliaqat96/beyond-answers-rethinking-learning-in-the-age-of-artificial-intelligence-31289c2e0f90" target="_blank" rel="noopener">
         <div>
           <h3>Beyond Answers: Rethinking Learning in the Age of Artificial Intelligence</h3>
           <p>An essay on how AI is reshaping the way people learn — published on Medium.</p>
