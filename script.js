@@ -80,7 +80,7 @@
 
   /* ---------- Hero role-rotator (typewriter) ---------- */
   var roleTextEl = document.getElementById("role-rotator-text");
-  var ROLES = ["Software Engineer", "Machine Learning Engineer", "Data Scientist", "AI Application Builder"];
+  var ROLES = ["AI/ML Engineer", "Machine Learning Engineer", "Data Scientist", "AI Application Builder"];
   if (roleTextEl) {
     if (prefersReduced) {
       roleTextEl.textContent = ROLES[0];
