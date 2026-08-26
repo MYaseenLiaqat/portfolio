@@ -207,10 +207,11 @@
       if (isMatch) matches += 1;
     });
 
-    if (filterStatus) filterStatus.querySelector("span").textContent = matches ? (label + " → " + matches + " project" + (matches === 1 ? "" : "s")) : (label + " → no featured project card; see experience/profile evidence");
+    if (filterStatus) filterStatus.querySelector("span").textContent = matches ? (label + " → " + matches + " project" + (matches === 1 ? "" : "s")) : (label + " → not in the homepage selection; see all projects");
     if (clearProjectFilter) clearProjectFilter.hidden = false;
 
-    document.getElementById("projects").scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+    var projectsSection = document.getElementById("projects");
+    if (projectsSection) projectsSection.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
   }
 
   skillButtons.forEach(function (button) {
