@@ -1,543 +1,65 @@
-(function () {
+(function(){
   "use strict";
+  var reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var year=document.getElementById("year");if(year)year.textContent=new Date().getFullYear();
+  var menuButton=document.getElementById("menu-button"),mobileNav=document.getElementById("mobile-nav");
+  if(menuButton&&mobileNav){menuButton.addEventListener("click",function(){var open=mobileNav.classList.toggle("is-open");menuButton.setAttribute("aria-expanded",String(open));});mobileNav.querySelectorAll("a").forEach(function(a){a.addEventListener("click",function(){mobileNav.classList.remove("is-open");menuButton.setAttribute("aria-expanded","false");});});}
 
-  /* ---------------------------------
-     Reveal-on-scroll, once only
-  ---------------------------------- */
-  var revealItems = document.querySelectorAll(".reveal");
-  if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-    revealItems.forEach(function (el) { el.classList.add("is-visible"); });
-  } else {
-    var revealObserver = new IntersectionObserver(function (entries, observer) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+  var progress=document.getElementById("page-progress-fill");
+  function updateProgress(){if(!progress)return;var max=document.documentElement.scrollHeight-window.innerHeight;progress.style.width=(max>0?window.scrollY/max*100:0)+"%";}
+  window.addEventListener("scroll",updateProgress,{passive:true});updateProgress();
 
-    revealItems.forEach(function (el) { revealObserver.observe(el); });
-  }
+  var reveals=document.querySelectorAll(".reveal");
+  if(reduced||!("IntersectionObserver" in window)){reveals.forEach(function(el){el.classList.add("is-visible");});}
+  else{var ro=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add("is-visible");ro.unobserve(e.target);}});},{threshold:.08,rootMargin:"0px 0px -25px 0px"});reveals.forEach(function(el){ro.observe(el);});}
 
-  /* ---------------------------------
-     Header progress + active section
-  ---------------------------------- */
-  var progressFill = document.getElementById("page-progress-fill");
-  var desktopNavLinks = Array.prototype.slice.call(document.querySelectorAll(".desktop-nav a[href^='#']"));
-  var trackedSections = desktopNavLinks.map(function (link) {
-    return { link: link, section: document.querySelector(link.getAttribute("href")) };
-  }).filter(function (item) { return item.section; });
+  var focus=document.getElementById("focus-rotator");
+  if(focus&&!reduced){var roles=["AI/ML engineering","RAG & LLM applications","backend-heavy AI systems","applied machine learning"],ri=0;setInterval(function(){focus.classList.add("is-changing");setTimeout(function(){ri=(ri+1)%roles.length;focus.textContent=roles[ri];focus.classList.remove("is-changing");},160);},2600);}
 
-  function updateScrollUI() {
-    var scrollTop = window.scrollY || document.documentElement.scrollTop;
-    var scrollable = document.documentElement.scrollHeight - window.innerHeight;
-    var progress = scrollable > 0 ? (scrollTop / scrollable) * 100 : 0;
-    if (progressFill) progressFill.style.width = progress + "%";
+  document.querySelectorAll("[data-count-to]").forEach(function(el){var target=parseFloat(el.dataset.countTo),dec=parseInt(el.dataset.decimals||"0",10),suffix=el.dataset.suffix||"";if(reduced){el.textContent=target.toFixed(dec)+suffix;return;}var seen=false;var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting||seen)return;seen=true;var start=null,d=700;function tick(t){if(start===null)start=t;var p=Math.min((t-start)/d,1),v=target*(1-Math.pow(1-p,3));el.textContent=v.toFixed(dec)+suffix;if(p<1)requestAnimationFrame(tick);}requestAnimationFrame(tick);obs.disconnect();});},{threshold:.5});obs.observe(el);});
 
-    var marker = scrollTop + window.innerHeight * 0.33;
-    var current = null;
-    trackedSections.forEach(function (item) {
-      if (item.section.offsetTop <= marker) current = item;
-    });
-    trackedSections.forEach(function (item) {
-      item.link.classList.toggle("is-active", item === current);
-    });
-  }
+  var cards=Array.prototype.slice.call(document.querySelectorAll(".project-card"));
+  cards.forEach(function(card){card.addEventListener("pointermove",function(e){var r=card.getBoundingClientRect();card.style.setProperty("--mx",((e.clientX-r.left)/r.width*100)+"%");card.style.setProperty("--my",((e.clientY-r.top)/r.height*100)+"%");});});
 
-  var scrollTicking = false;
-  window.addEventListener("scroll", function () {
-    if (!scrollTicking) {
-      window.requestAnimationFrame(function () {
-        updateScrollUI();
-        scrollTicking = false;
-      });
-      scrollTicking = true;
-    }
-  }, { passive: true });
-  updateScrollUI();
-
-  /* ---------------------------------
-     Mobile navigation
-  ---------------------------------- */
-  var menuButton = document.getElementById("menu-button");
-  var mobileNav = document.getElementById("mobile-nav");
-  if (menuButton && mobileNav) {
-    menuButton.addEventListener("click", function () {
-      var open = !mobileNav.classList.contains("is-open");
-      mobileNav.classList.toggle("is-open", open);
-      menuButton.setAttribute("aria-expanded", String(open));
-      menuButton.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
-    });
-
-    mobileNav.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", function () {
-        mobileNav.classList.remove("is-open");
-        menuButton.setAttribute("aria-expanded", "false");
-        menuButton.setAttribute("aria-label", "Open navigation");
-      });
-    });
-  }
-
-  /* ---------------------------------
-     Subtle hero focus rotator
-  ---------------------------------- */
-  var focusRotator = document.getElementById("focus-rotator");
-  var focusItems = [
-    "AI/ML engineering",
-    "RAG & LLM applications",
-    "backend systems",
-    "data & ML pipelines"
-  ];
-  if (focusRotator && !prefersReducedMotion) {
-    var focusIndex = 0;
-    window.setInterval(function () {
-      focusRotator.classList.add("is-changing");
-      window.setTimeout(function () {
-        focusIndex = (focusIndex + 1) % focusItems.length;
-        focusRotator.textContent = focusItems[focusIndex];
-        focusRotator.classList.remove("is-changing");
-      }, 180);
-    }, 2800);
-  }
-
-  /* ---------------------------------
-     Count-up highlights
-  ---------------------------------- */
-  var counters = document.querySelectorAll("[data-count-to]");
-  function animateCounter(el) {
-    if (el.dataset.counted === "true") return;
-    el.dataset.counted = "true";
-
-    var target = parseFloat(el.getAttribute("data-count-to"));
-    var decimals = parseInt(el.getAttribute("data-decimals") || "0", 10);
-    var suffix = el.getAttribute("data-suffix") || "";
-    if (prefersReducedMotion) {
-      el.textContent = target.toFixed(decimals) + suffix;
-      return;
-    }
-
-    var start = null;
-    var duration = 850;
-    function step(timestamp) {
-      if (start === null) start = timestamp;
-      var p = Math.min((timestamp - start) / duration, 1);
-      var eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = (target * eased).toFixed(decimals) + suffix;
-      if (p < 1) window.requestAnimationFrame(step);
-    }
-    window.requestAnimationFrame(step);
-  }
-
-  if ("IntersectionObserver" in window) {
-    var counterObserver = new IntersectionObserver(function (entries, observer) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          animateCounter(entry.target);
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.5 });
-    counters.forEach(function (el) { counterObserver.observe(el); });
-  } else {
-    counters.forEach(animateCounter);
-  }
-
-  /* ---------------------------------
-     Capability -> project evidence filter
-  ---------------------------------- */
-  var skillButtons = Array.prototype.slice.call(document.querySelectorAll("[data-skill]"));
-  var projectCards = Array.prototype.slice.call(document.querySelectorAll(".project-card"));
-  var filterStatus = document.getElementById("project-filter-status");
-  var clearProjectFilter = document.getElementById("clear-project-filter");
-  var activeSkillButton = null;
-
-  var skillAliases = {
-    "pytorch": ["pytorch", "ml"],
-    "scikit-learn": ["scikit-learn", "ml"],
-    "rag": ["rag", "ai"],
-    "langchain": ["langchain", "rag"],
-    "llamaindex": ["llamaindex", "rag"],
-    "embeddings": ["embeddings", "rag"],
-    "prompt-engineering": ["prompt-engineering", "ai"],
-    "evaluation": ["evaluation", "research", "ai"],
-    "testing": ["testing", "research", "backend", "ai"],
-    "python": ["python"],
-    "fastapi": ["fastapi", "backend"],
-    "flask": ["flask", "backend"],
-    "rest-apis": ["rest-apis", "backend"],
-    "docker": ["docker", "backend"],
-    "csharp": ["csharp", "backend"],
-    "sql": ["sql", "data"],
-    "postgresql": ["postgresql", "data"],
-    "gcp": ["gcp", "data"],
-    "bigquery": ["bigquery", "data"],
-    "etl": ["etl", "data"],
-    "tableau": ["tableau", "data"],
-    "react": ["react", "product"],
-    "nextjs": ["nextjs", "product"],
-    "flutter": ["flutter", "product"],
-    "javascript": ["javascript", "product"],
-    "typescript": ["typescript", "product"]
+  var skillButtons=Array.prototype.slice.call(document.querySelectorAll("[data-skill]"));
+  var filterStatus=document.getElementById("project-filter-status"),clearFilter=document.getElementById("clear-project-filter"),active=null;
+  var aliases={
+    "pytorch":["pytorch","ml","ai"],"scikit-learn":["scikit-learn","ml"],"pandas-numpy":["pandas-numpy","data","ml"],"langchain":["langchain","rag"],"llamaindex":["llamaindex","rag"],"rag":["rag"],"chromadb":["chromadb","rag"],"sentence-transformers":["sentence-transformers","embeddings","rag"],"groq":["groq","ai"],"prompt-engineering":["prompt-engineering","ai"],"feature-engineering":["feature-engineering","ml"],"hyperparameter-tuning":["hyperparameter-tuning","ml"],"evaluation":["evaluation","ai"],"testing":["testing"],"guardrails":["guardrails","ai"],"experimental-design":["experimental-design","research"],
+    "python":["python"],"csharp":["csharp"],"fastapi":["fastapi"],"flask":["flask"],"aspnet":["aspnet"],"rest-apis":["rest-apis","backend"],
+    "sql":["sql","data"],"postgresql":["postgresql","data"],"sql-server":["sql-server","data"],"mysql":["mysql","data"],"gcp":["gcp","data"],"bigquery":["bigquery","data"],"dataflow":["dataflow","data"],"etl":["etl","data"],"tableau":["tableau","data"],"power-bi":["power-bi","data"],"dax":["dax","data"],
+    "react":["react","product"],"nextjs":["nextjs","product"],"flutter":["flutter","mobile"],"javascript":["javascript","product"],"typescript":["typescript","product"],"dart":["dart","mobile"],"html-css":["html-css","product"],"supabase":["supabase","product"],"firebase":["firebase","backend","product"],
+    "git":["git"],"github":["github"],"cicd":["cicd"],"docker":["docker"],"agile":["agile"]
   };
+  function clearSkillFilter(){if(active)active.classList.remove("is-active");active=null;cards.forEach(function(c){c.classList.remove("is-match","is-dim");});if(filterStatus)filterStatus.querySelector("span").textContent="Showing selected work";if(clearFilter)clearFilter.hidden=true;}
+  function applySkill(button){var key=button.dataset.skill,list=aliases[key]||[key],matches=0;cards.forEach(function(c){var stack=(c.dataset.stack||"").toLowerCase().split(/\s+/),hit=list.some(function(a){return stack.indexOf(a)!==-1;});c.classList.toggle("is-match",hit);c.classList.toggle("is-dim",!hit);if(hit)matches++;});if(filterStatus)filterStatus.querySelector("span").textContent=matches?button.textContent.trim()+" → "+matches+" project"+(matches===1?"":"s"):button.textContent.trim()+" → not in this selected set";if(clearFilter)clearFilter.hidden=false;var ps=document.getElementById("projects");if(ps)ps.scrollIntoView({behavior:reduced?"auto":"smooth",block:"start"});}
+  skillButtons.forEach(function(b){b.addEventListener("click",function(){if(active===b){clearSkillFilter();return;}if(active)active.classList.remove("is-active");active=b;b.classList.add("is-active");applySkill(b);});});if(clearFilter)clearFilter.addEventListener("click",clearSkillFilter);
 
-  function clearSkillFilter() {
-    if (activeSkillButton) activeSkillButton.classList.remove("is-active");
-    activeSkillButton = null;
-    projectCards.forEach(function (card) {
-      card.classList.remove("is-dim", "is-match");
-    });
-    if (filterStatus) filterStatus.querySelector("span").textContent = "Showing all work";
-    if (clearProjectFilter) clearProjectFilter.hidden = true;
-  }
-
-  function applySkillFilter(button) {
-    var skill = button.getAttribute("data-skill");
-    var aliases = skillAliases[skill] || [skill];
-    var label = button.textContent.trim();
-    var matches = 0;
-
-    projectCards.forEach(function (card) {
-      var stack = (card.getAttribute("data-stack") || "").toLowerCase().split(/\s+/);
-      var isMatch = aliases.some(function (alias) { return stack.indexOf(alias) !== -1; });
-      card.classList.toggle("is-match", isMatch);
-      card.classList.toggle("is-dim", !isMatch);
-      if (isMatch) matches += 1;
-    });
-
-    if (filterStatus) filterStatus.querySelector("span").textContent = matches ? (label + " → " + matches + " project" + (matches === 1 ? "" : "s")) : (label + " → not in the homepage selection; see all projects");
-    if (clearProjectFilter) clearProjectFilter.hidden = false;
-
-    var projectsSection = document.getElementById("projects");
-    if (projectsSection) projectsSection.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
-  }
-
-  skillButtons.forEach(function (button) {
-    button.addEventListener("click", function () {
-      if (activeSkillButton === button) {
-        clearSkillFilter();
-        return;
-      }
-      if (activeSkillButton) activeSkillButton.classList.remove("is-active");
-      activeSkillButton = button;
-      button.classList.add("is-active");
-      applySkillFilter(button);
-    });
-  });
-
-  if (clearProjectFilter) clearProjectFilter.addEventListener("click", clearSkillFilter);
-
-  /* ---------------------------------
-     Professional card spotlight
-  ---------------------------------- */
-  projectCards.forEach(function (card) {
-    card.addEventListener("pointermove", function (event) {
-      var rect = card.getBoundingClientRect();
-      card.style.setProperty("--mx", ((event.clientX - rect.left) / rect.width) * 100 + "%");
-      card.style.setProperty("--my", ((event.clientY - rect.top) / rect.height) * 100 + "%");
-    });
-  });
-
-  /* ---------------------------------
-     Local JD evidence matcher
-     This is intentionally deterministic and transparent.
-  ---------------------------------- */
-  var jdInput = document.getElementById("jd-input");
-  var analyzeButton = document.getElementById("analyze-jd");
-  var clearJdButton = document.getElementById("clear-jd");
-  var matcherEmpty = document.getElementById("matcher-empty");
-  var matcherResults = document.getElementById("matcher-results");
-  var matchScore = document.getElementById("match-score");
-  var scoreRing = document.getElementById("score-ring");
-  var matchLabel = document.getElementById("match-label");
-  var matchSummary = document.getElementById("match-summary");
-  var matchedSkills = document.getElementById("matched-skills");
-  var missingSkills = document.getElementById("missing-skills");
-  var evidenceList = document.getElementById("evidence-list");
-  var recruiterBriefText = document.getElementById("recruiter-brief-text");
-  var experienceWarning = document.getElementById("experience-warning");
-  var copySummaryButton = document.getElementById("copy-summary");
-  var lastSummaryText = "";
-
-  var PROFILE_YEARS = 1.5;
-
-  var competencyMap = [
-    { name: "Python", aliases: ["python"], have: true, evidence: "Python appears across the production backend and AI/ML projects." },
-    { name: "FastAPI", aliases: ["fastapi", "fast api"], have: true, evidence: "Current role includes FastAPI middleware connecting internal systems and partner applications; AI Learning Research also uses FastAPI for controlled task and AI workflows." },
-    { name: "Flask", aliases: ["flask"], have: true, evidence: "Mabros Couriers uses Flask for its production backend API." },
-    { name: "REST APIs", aliases: ["rest api", "restful", "api development", "apis"], have: true, evidence: "REST API design and service integration are demonstrated in both professional experience and Mabros Couriers." },
-    { name: "Docker", aliases: ["docker", "containerization", "containers"], have: true, evidence: "Docker is used to standardize deployment in current professional work and in Mabros Couriers." },
-    { name: "SQL", aliases: ["sql", "relational database", "relational databases"], have: true, evidence: "SQL and relational database design are part of prior software engineering work and data projects; an Advanced SQL credential from Kaggle adds recent structured practice." },
-    { name: "PostgreSQL", aliases: ["postgresql", "postgres"], have: true, evidence: "PostgreSQL is listed in the portfolio database stack." },
-    { name: "MySQL", aliases: ["mysql"], have: true, evidence: "MySQL is listed in the portfolio database stack." },
-    { name: "SQL Server", aliases: ["sql server", "mssql"], have: true, evidence: "SQL Server is listed in the portfolio database stack." },
-    { name: "PyTorch", aliases: ["pytorch", "torch"], have: true, evidence: "PyTorch is part of the portfolio ML stack." },
-    { name: "Scikit-learn", aliases: ["scikit-learn", "sklearn", "scikit learn"], have: true, evidence: "The Bank Marketing project compares and tunes multiple Scikit-learn classifiers." },
-    { name: "Machine Learning", aliases: ["machine learning", " ml ", "predictive modeling", "classification model"], have: true, evidence: "The Bank Marketing project demonstrates model comparison, feature engineering, and tuning." },
-    { name: "RAG", aliases: ["retrieval augmented generation", "retrieval-augmented generation", "rag"], have: true, evidence: "AI Growth Journal and Reflct both demonstrate retrieval-based AI application work." },
-    { name: "LangChain", aliases: ["langchain"], have: true, evidence: "AI Growth Journal is built with LangChain and a RAG pipeline." },
-    { name: "LlamaIndex", aliases: ["llamaindex", "llama index"], have: true, evidence: "Reflct uses LlamaIndex for retrieval." },
-    { name: "Embeddings", aliases: ["embedding", "embeddings", "vector search", "semantic search"], have: true, evidence: "AI Growth Journal uses vector embeddings and semantic retrieval over past entries." },
-    { name: "LLM applications", aliases: ["llm", "large language model", "generative ai", "genai", "generative artificial intelligence"], have: true, evidence: "AI Learning Research, Reflct, and AI Growth Journal demonstrate applied LLM-backed system design, retrieval workflows, and controlled AI behavior; recent Google Cloud badges reinforce the architecture fundamentals." },
-    { name: "Prompt Engineering", aliases: ["prompt engineering", "prompt design", "system prompt"], have: true, evidence: "AI Learning Research uses versioned prompts and explicit assistance constraints; prompt engineering is also demonstrated in RAG application work." },
-    { name: "AI Evaluation", aliases: ["llm evaluation", "ai evaluation", "evaluation framework", "evals", "evaluation pipeline"], have: true, evidence: "AI Learning Research includes staged tasks, deterministic grading, controlled assistance, and research logging designed for evaluation." },
-    { name: "Testing / Pytest", aliases: ["pytest", "unit testing", "integration testing", "automated tests", "testing"], have: true, evidence: "AI Learning Research includes 15+ integrity and backend tests across access, submission, scheduling, seed data, and prompt context." },
-    { name: "AI Guardrails", aliases: ["guardrails", "ai guardrails", "llm guardrails", "ai safety", "prompt constraints", "safety controls"], have: true, evidence: "AI Learning Research enforces condition-aware AI access, attempt ownership, time windows, interaction caps, and constrained tutoring prompts." },
-    { name: "Experimental Design", aliases: ["experimental design", "controlled experiment", "research design", "a/b test", "ab test"], have: true, evidence: "AI Learning Research is structured around controlled-AI and no-AI learner conditions with frozen provenance across study phases." },
-    { name: "GCP", aliases: ["gcp", "google cloud", "google cloud platform"], have: true, evidence: "Google Cloud Platform is part of the cloud/data stack." },
-    { name: "BigQuery", aliases: ["bigquery", "big query"], have: true, evidence: "BigQuery and BigQuery ML are listed in the portfolio cloud/data stack." },
-    { name: "ETL", aliases: ["etl", "data pipeline", "data pipelines", "data engineering"], have: true, evidence: "ETL pipelines and data engineering are listed as applied capabilities." },
-    { name: "React", aliases: ["react.js", "reactjs", "react"], have: true, evidence: "Current professional work includes React.js features for a retail agent-facing application." },
-    { name: "Next.js", aliases: ["next.js", "nextjs"], have: true, evidence: "Reflct is a live full-stack application built with Next.js." },
-    { name: "Flutter", aliases: ["flutter", "dart"], have: true, evidence: "Current role includes ownership of a cross-platform Flutter application; Popal Eats is published on Google Play." },
-    { name: "JavaScript / TypeScript", aliases: ["javascript", "typescript", "js/ts"], have: true, evidence: "JavaScript and TypeScript are listed in the portfolio language stack; Next.js work provides product evidence." },
-    { name: "Tableau", aliases: ["tableau"], have: true, evidence: "A live Tableau Sales Dashboard demonstrates BI and data visualization work." },
-    { name: "Power BI", aliases: ["power bi", "powerbi", "dax"], have: true, evidence: "Power BI and DAX are listed in the portfolio BI stack." },
-
-    /* Common role requirements not currently evidenced strongly enough on this page */
-    { name: "AWS", aliases: ["aws", "amazon web services"], have: false },
-    { name: "Azure", aliases: ["azure", "microsoft azure"], have: false },
-    { name: "Kubernetes", aliases: ["kubernetes", "k8s"], have: false },
-    { name: "Terraform", aliases: ["terraform", "infrastructure as code", "iac"], have: false },
-    { name: "MLflow", aliases: ["mlflow", "ml flow"], have: false },
-    { name: "Airflow", aliases: ["airflow", "apache airflow"], have: false },
-    { name: "Spark", aliases: ["spark", "pyspark", "apache spark"], have: false },
-    { name: "Kafka", aliases: ["kafka", "apache kafka"], have: false },
-    { name: "TensorFlow", aliases: ["tensorflow", "keras"], have: false },
-    { name: "Computer Vision", aliases: ["computer vision", "opencv", "object detection", "image classification"], have: false },
-    { name: "NLP", aliases: ["natural language processing", " nlp "], have: false },
-    { name: "Fine-tuning", aliases: ["fine-tuning", "finetuning", "fine tuning", "lora", "qlora", "peft"], have: false },
-    { name: "MLOps", aliases: ["mlops", "ml ops", "model monitoring", "model registry"], have: false },
-    { name: "Git / CI-CD", aliases: ["git", "github", "ci/cd", "cicd", "continuous integration", "continuous deployment"], have: true, evidence: "Git / CI-CD is listed in the tools stack, and the portfolio now includes the GitHub Foundations credential." },
-    { name: "Node.js", aliases: ["node.js", "nodejs", "node js"], have: false },
-    { name: "C++", aliases: ["c++", "cpp"], have: false }
+  var jd=document.getElementById("jd-input"),analyze=document.getElementById("analyze-jd"),clearJd=document.getElementById("clear-jd"),empty=document.getElementById("matcher-empty"),results=document.getElementById("matcher-results"),scoreEl=document.getElementById("match-score"),ring=document.getElementById("score-ring"),label=document.getElementById("match-label"),summary=document.getElementById("match-summary"),matched=document.getElementById("matched-skills"),missing=document.getElementById("missing-skills"),evidence=document.getElementById("evidence-list"),brief=document.getElementById("recruiter-brief-text"),warning=document.getElementById("experience-warning"),copy=document.getElementById("copy-summary");
+  var PROFILE_YEARS=1.5,lastSummary="";
+  var map=[
+    ["Python",["python"],"Python is used across production backend and AI/ML work."],["FastAPI",["fastapi","fast api"],"FastAPI appears in current middleware work and AI Learning Research."],["Flask",["flask"],"Mabros Couriers uses Flask for a live backend API."],["REST APIs",["rest api","restful","api development","apis"],"REST API design appears in both professional roles and project work."],["Docker",["docker","containerization","containers"],"Docker is used in current professional work and Mabros Couriers."],
+    ["Git",["git","version control"],"Git is part of the engineering workflow and recent DataCamp coursework."],["GitHub",["github"],"GitHub is used for project source and collaboration workflows; GitHub Foundations was completed on DataCamp."],["CI/CD",["ci/cd","ci cd","continuous integration","continuous delivery","continuous deployment"],"CI/CD is part of the stated engineering workflow."],["Agile",["agile","scrum"],"Agile is part of the engineering practices stack."],
+    ["SQL",["sql","relational database","relational databases"],"SQL and relational design appear in professional work and data projects."],["PostgreSQL",["postgresql","postgres"],"PostgreSQL is part of the database stack."],["MySQL",["mysql"],"MySQL is part of the database stack."],["SQL Server",["sql server","mssql"],"SQL Server is part of the database stack."],["GCP",["gcp","google cloud","google cloud platform"],"Google Cloud is part of the cloud/data stack."],["BigQuery",["bigquery","big query"],"BigQuery and BigQuery ML are part of the cloud/data stack."],["Dataflow",["dataflow"],"Dataflow is listed in the data engineering stack."],["ETL",["etl","data pipeline","data pipelines","data engineering"],"ETL pipelines are part of the data engineering capability set."],["Tableau",["tableau"],"A live Tableau sales dashboard is available on the work page."],["Power BI",["power bi","powerbi"],"Power BI is listed in the BI stack."],["DAX",["dax"],"DAX is listed in the BI stack."],
+    ["PyTorch",["pytorch","torch"],"PyTorch is part of the ML stack."],["Scikit-learn",["scikit-learn","sklearn","scikit learn"],"The Bank Marketing project compares and tunes multiple Scikit-learn classifiers."],["Machine Learning",["machine learning","predictive modeling","classification model"],"The Bank Marketing project demonstrates model comparison, feature engineering, and tuning."],["Pandas / NumPy",["pandas","numpy"],"Pandas and NumPy are part of the ML/data stack."],["RAG",["retrieval augmented generation","retrieval-augmented generation","rag"],"Reflct and AI Growth Journal demonstrate retrieval-based AI application work."],["LangChain",["langchain"],"AI Growth Journal uses LangChain in its RAG pipeline."],["LlamaIndex",["llamaindex","llama index"],"Reflct uses LlamaIndex for retrieval."],["ChromaDB",["chromadb","chroma"],"AI Growth Journal uses ChromaDB in its retrieval stack."],["Embeddings",["embedding","embeddings","vector search","semantic search","sentence transformer"],"AI Growth Journal uses vector embeddings and semantic retrieval."],["Groq",["groq"],"Reflct uses Groq for LLM inference."],["LLM applications",["llm","large language model","generative ai","genai"],"AI Learning Research, Reflct, and AI Growth Journal demonstrate applied LLM system design."],["Prompt Engineering",["prompt engineering","prompt design","system prompt"],"AI Learning Research uses versioned prompts and explicit assistance constraints."],["AI Evaluation",["llm evaluation","ai evaluation","evaluation framework","evals","evaluation pipeline"],"AI Learning Research includes staged tasks, deterministic grading, controlled assistance, and research logging."],["Testing / Pytest",["pytest","unit testing","integration testing","automated tests","testing"],"AI Learning Research includes 15+ integrity and backend tests."],["AI Guardrails",["guardrails","ai guardrails","llm guardrails","ai safety","prompt constraints","safety controls"],"AI Learning Research enforces access rules, ownership, time windows, interaction caps, and constrained tutoring prompts."],["Experimental Design",["experimental design","controlled experiment","research design","a/b test","ab test"],"AI Learning Research uses controlled-AI and no-AI conditions with frozen provenance."],["Feature Engineering",["feature engineering"],"The Bank Marketing project includes feature engineering."],["Hyperparameter Tuning",["hyperparameter","gridsearchcv","grid search","model tuning"],"The Bank Marketing project uses model comparison and hyperparameter tuning."],
+    ["React",["react.js","reactjs","react"],"Current professional work includes React.js features."],["Next.js",["next.js","nextjs"],"Reflct is a live application built with Next.js."],["Flutter",["flutter","dart"],"Current role includes Flutter ownership and Popal Eats is published on Google Play."],["JavaScript",["javascript","js"],"JavaScript is part of the product engineering stack."],["TypeScript",["typescript","ts"],"TypeScript is part of the product engineering stack."],["Supabase",["supabase"],"Reflct uses Supabase for persistent application data."],["Firebase",["firebase"],"Mabros Couriers uses Firebase in its backend stack."],["C#",["c#","c sharp","csharp",".net","dotnet"],"C#/.NET is part of the software engineering background."],["ASP.NET MVC",["asp.net","aspnet","mvc"],"ASP.NET MVC is part of the backend stack."]
   ];
-
-  function normalizedText(text) {
-    return " " + text.toLowerCase().replace(/[\n\r\t,;:()\[\]{}]/g, " ").replace(/\s+/g, " ") + " ";
+  function norm(s){return " "+s.toLowerCase().replace(/[\n\r\t]+/g," ").replace(/[^a-z0-9+#./-]+/g," ").replace(/\s+/g," ").trim()+" ";}
+  function hit(text,alias){var a=alias.toLowerCase();if(a.length<=3&&/^[a-z]+$/.test(a))return text.indexOf(" "+a+" ")!==-1;return text.indexOf(a)!==-1;}
+  function requestedYears(raw){var ms=[].concat(Array.from(raw.matchAll(/(\d+(?:\.\d+)?)\s*\+?\s*(?:years?|yrs?)/gi))).map(function(m){return parseFloat(m[1]);}).filter(isFinite);return ms.length?Math.max.apply(null,ms):null;}
+  function addTags(el,arr){el.innerHTML="";(arr.length?arr:["None recognized"]).forEach(function(x){var s=document.createElement("span");s.textContent=x;el.appendChild(s);});}
+  function runMatcher(){if(!jd||!jd.value.trim())return;var raw=jd.value,text=norm(raw),recognized=[],hits=[],gaps=[];map.forEach(function(item){var found=item[1].some(function(a){return hit(text,a);});if(found){recognized.push(item[0]);hits.push(item);}});var explicitGaps=[["AWS",["aws","amazon web services"]],["Azure",["azure"]],["Kubernetes",["kubernetes","k8s"]],["TensorFlow",["tensorflow"]],["Spark",["apache spark","pyspark"]],["Kafka",["kafka"]],["Airflow",["airflow"]],["Redis",["redis"]],["MongoDB",["mongodb","mongo db"]]].filter(function(g){return g[1].some(function(a){return hit(text,a);});}).map(function(g){return g[0];});gaps=explicitGaps;
+    var reqCount=recognized.length+gaps.length,score=reqCount?Math.round(recognized.length/reqCount*100):0;var years=requestedYears(raw);if(years&&years>PROFILE_YEARS)score=Math.max(0,score-8);var lab=score>=80?"Strong evidence overlap":score>=60?"Good evidence overlap":score>=40?"Partial evidence overlap":"Limited recognized overlap";
+    var sum=reqCount?recognized.length+" recognized requirement"+(recognized.length===1?"":"s")+" matched portfolio evidence; "+gaps.length+" explicitly requested technolog"+(gaps.length===1?"y":"ies")+" are not currently shown.":"I could not identify enough requirements from the controlled skill set. Add the stack, tools, or engineering requirements for a more useful comparison.";
+    var strongest=recognized.slice(0,6);var br=strongest.length?"Strongest overlap: "+strongest.join(", ")+". Evidence is concentrated in professional API/backend work plus AI Learning Research, Reflct, Mabros Couriers, and the ML/RAG projects.":"The JD does not yet contain enough recognized requirements to produce a useful brief.";if(gaps.length)br+=" Validate gaps: "+gaps.join(", ")+".";
+    if(scoreEl)scoreEl.textContent=score+"%";if(ring)ring.style.setProperty("--score",score*3.6+"deg");if(label)label.textContent=lab;if(summary)summary.textContent=sum;if(brief)brief.textContent=br;addTags(matched,recognized);addTags(missing,gaps);if(evidence){evidence.innerHTML="";hits.slice(0,6).forEach(function(item){var li=document.createElement("li");li.textContent=item[2];evidence.appendChild(li);});}
+    if(warning){if(years&&years>PROFILE_YEARS){warning.hidden=false;warning.textContent="Experience note: this JD appears to request about "+years+" years; the portfolio currently demonstrates about "+PROFILE_YEARS+"+ years of professional engineering experience.";}else warning.hidden=true;}
+    lastSummary="Evidence overlap: "+score+"% — "+lab+". "+sum+" "+br;if(empty)empty.hidden=true;if(results)results.hidden=false;
   }
+  if(analyze)analyze.addEventListener("click",runMatcher);if(jd)jd.addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&e.key==="Enter")runMatcher();});if(clearJd)clearJd.addEventListener("click",function(){if(jd)jd.value="";if(results)results.hidden=true;if(empty)empty.hidden=false;});if(copy)copy.addEventListener("click",function(){if(!lastSummary)return;navigator.clipboard.writeText(lastSummary).then(function(){var old=copy.textContent;copy.textContent="Copied";setTimeout(function(){copy.textContent=old;},1000);}).catch(function(){});});
 
-  function containsAlias(text, alias) {
-    var normalizedAlias = alias.toLowerCase();
-    if (normalizedAlias.trim().length <= 2 && normalizedAlias.indexOf(" ") === -1) {
-      var escaped = normalizedAlias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      return new RegExp("(^|\\W)" + escaped + "($|\\W)", "i").test(text);
-    }
-    return text.indexOf(normalizedAlias) !== -1;
-  }
-
-  function extractYearsRequirement(rawText) {
-    var patterns = [
-      /(\d+(?:\.\d+)?)\s*\+?\s*(?:years|year|yrs|yr)\s+(?:of\s+)?(?:professional\s+)?experience/i,
-      /(?:minimum|min\.?|at least)\s+(\d+(?:\.\d+)?)\s*(?:years|year|yrs|yr)/i,
-      /(\d+(?:\.\d+)?)\s*\+\s*(?:years|year|yrs|yr)/i
-    ];
-    for (var i = 0; i < patterns.length; i += 1) {
-      var match = rawText.match(patterns[i]);
-      if (match) return parseFloat(match[1]);
-    }
-    return null;
-  }
-
-  function renderTag(container, label) {
-    var tag = document.createElement("span");
-    tag.textContent = label;
-    container.appendChild(tag);
-  }
-
-  function analyzeJobDescription() {
-    if (!jdInput) return;
-    var raw = jdInput.value.trim();
-    if (!raw) {
-      jdInput.focus();
-      return;
-    }
-
-    var text = normalizedText(raw);
-    var recognized = [];
-    var matched = [];
-    var missing = [];
-
-    competencyMap.forEach(function (competency) {
-      var found = competency.aliases.some(function (alias) { return containsAlias(text, alias); });
-      if (!found) return;
-      recognized.push(competency);
-      if (competency.have) matched.push(competency);
-      else missing.push(competency);
-    });
-
-    var score = recognized.length ? Math.round((matched.length / recognized.length) * 100) : 0;
-    var yearsRequired = extractYearsRequirement(raw);
-
-    if (matcherEmpty) matcherEmpty.hidden = true;
-    if (matcherResults) matcherResults.hidden = false;
-    if (matchScore) matchScore.textContent = score + "%";
-    if (scoreRing) scoreRing.style.setProperty("--score", (score * 3.6) + "deg");
-
-    var label;
-    if (!recognized.length) label = "Add more technical detail";
-    else if (score >= 80) label = "Strong evidence alignment";
-    else if (score >= 60) label = "Good evidence alignment";
-    else if (score >= 40) label = "Partial evidence alignment";
-    else label = "Limited evidence alignment";
-    if (matchLabel) matchLabel.textContent = label;
-
-    var summary;
-    if (!recognized.length) {
-      summary = "I could not identify enough technical requirements from the controlled skill set. Add the stack, tools, or engineering requirements to get a more useful comparison.";
-    } else {
-      summary = "Matched " + matched.length + " of " + recognized.length + " recognized technical requirements from the job description.";
-      if (missing.length) summary += " " + missing.length + " requirement" + (missing.length === 1 ? " is" : "s are") + " not explicitly evidenced on this portfolio.";
-    }
-    if (matchSummary) matchSummary.textContent = summary;
-
-    if (matchedSkills) matchedSkills.innerHTML = "";
-    if (missingSkills) missingSkills.innerHTML = "";
-    if (evidenceList) evidenceList.innerHTML = "";
-
-    if (matched.length) {
-      matched.forEach(function (item) {
-        renderTag(matchedSkills, item.name);
-        if (item.evidence) {
-          var li = document.createElement("li");
-          li.textContent = item.name + " — " + item.evidence;
-          evidenceList.appendChild(li);
-        }
-      });
-    } else {
-      renderTag(matchedSkills, "No recognized matches yet");
-    }
-
-    if (missing.length) {
-      missing.forEach(function (item) { renderTag(missingSkills, item.name); });
-    } else {
-      renderTag(missingSkills, recognized.length ? "No recognized gaps in this comparison" : "Not enough requirements recognized");
-    }
-
-    var recruiterBrief = "";
-    if (!recognized.length) {
-      recruiterBrief = "Add a more technical job description to generate an evidence-backed recruiter brief.";
-    } else {
-      var topMatches = matched.slice(0, 5).map(function (item) { return item.name; });
-      var topGaps = missing.slice(0, 3).map(function (item) { return item.name; });
-      var matchedLower = matched.map(function (item) { return item.name.toLowerCase(); }).join(" ");
-      var sources = [];
-      if (/llm|rag|prompt|evaluation|guardrail|experimental|fastapi|testing/.test(matchedLower)) sources.push("AI Learning Research");
-      if (/llm|rag|llamaindex|next|javascript|typescript/.test(matchedLower)) sources.push("Reflct");
-      if (/fastapi|rest|docker|flutter|react|python/.test(matchedLower)) sources.push("professional engineering experience");
-      if (/flask|rest|docker|python/.test(matchedLower)) sources.push("Mabros Couriers");
-      if (/machine learning|scikit/.test(matchedLower)) sources.push("Bank Marketing Prediction");
-      sources = sources.filter(function (item, idx, arr) { return arr.indexOf(item) === idx; }).slice(0, 4);
-
-      recruiterBrief = topMatches.length
-        ? "Strongest alignment is around " + topMatches.join(", ") + ". "
-        : "The controlled matcher found limited explicit overlap. ";
-      if (sources.length) recruiterBrief += "The clearest supporting evidence comes from " + sources.join(", ") + ". ";
-      recruiterBrief += topGaps.length
-        ? "Potential gaps to validate in interview: " + topGaps.join(", ") + "."
-        : "No recognized technical gaps were found in the terms this matcher understands.";
-    }
-    if (recruiterBriefText) recruiterBriefText.textContent = recruiterBrief;
-
-    if (experienceWarning) {
-      if (yearsRequired && yearsRequired > PROFILE_YEARS) {
-        experienceWarning.hidden = false;
-        experienceWarning.textContent = "Experience note: this JD appears to request about " + yearsRequired + "+ years. The public portfolio currently evidences roughly " + PROFILE_YEARS + "+ years of engineering experience, so tenure may be a gap even where the technical stack aligns.";
-      } else {
-        experienceWarning.hidden = true;
-        experienceWarning.textContent = "";
-      }
-    }
-
-    var matchedNames = matched.map(function (item) { return item.name; }).join(", ") || "none recognized";
-    var missingNames = missing.map(function (item) { return item.name; }).join(", ") || "none among recognized terms";
-    lastSummaryText = "Portfolio evidence match: " + score + "%\nMatched: " + matchedNames + "\nNot explicitly evidenced: " + missingNames + "\nRecruiter brief: " + recruiterBrief + (yearsRequired && yearsRequired > PROFILE_YEARS ? "\nExperience note: JD appears to request " + yearsRequired + "+ years while this portfolio currently evidences about " + PROFILE_YEARS + "+ years." : "");
-  }
-
-  if (analyzeButton) analyzeButton.addEventListener("click", analyzeJobDescription);
-  if (clearJdButton) {
-    clearJdButton.addEventListener("click", function () {
-      jdInput.value = "";
-      if (matcherResults) matcherResults.hidden = true;
-      if (matcherEmpty) matcherEmpty.hidden = false;
-      lastSummaryText = "";
-      jdInput.focus();
-    });
-  }
-  if (jdInput) {
-    jdInput.addEventListener("keydown", function (event) {
-      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-        event.preventDefault();
-        analyzeJobDescription();
-      }
-    });
-  }
-  if (copySummaryButton) {
-    copySummaryButton.addEventListener("click", function () {
-      if (!lastSummaryText) return;
-      navigator.clipboard.writeText(lastSummaryText).then(function () {
-        var original = copySummaryButton.textContent;
-        copySummaryButton.textContent = "Copied";
-        window.setTimeout(function () { copySummaryButton.textContent = original; }, 1200);
-      }).catch(function () {
-        copySummaryButton.textContent = "Copy unavailable";
-      });
-    });
-  }
-
-  /* ---------------------------------
-     Credential image viewer
-  ---------------------------------- */
-  var credentialDialog = document.getElementById("credential-dialog");
-  var credentialDialogImage = document.getElementById("credential-dialog-image");
-  var credentialDialogTitle = document.getElementById("credential-dialog-title");
-  var credentialDialogClose = document.getElementById("credential-dialog-close");
-  var credentialImageButtons = document.querySelectorAll("[data-credential-image]");
-
-  function closeCredentialDialog() {
-    if (credentialDialog && credentialDialog.open) credentialDialog.close();
-  }
-
-  credentialImageButtons.forEach(function (button) {
-    button.addEventListener("click", function () {
-      if (!credentialDialog || !credentialDialogImage) return;
-      var src = button.getAttribute("data-credential-image");
-      var title = button.getAttribute("data-credential-title") || "Credential preview";
-      credentialDialogImage.src = src;
-      credentialDialogImage.alt = title;
-      if (credentialDialogTitle) credentialDialogTitle.textContent = title;
-      if (typeof credentialDialog.showModal === "function") credentialDialog.showModal();
-    });
-  });
-
-  if (credentialDialogClose) credentialDialogClose.addEventListener("click", closeCredentialDialog);
-  if (credentialDialog) {
-    credentialDialog.addEventListener("click", function (event) {
-      if (event.target === credentialDialog) closeCredentialDialog();
-    });
-  }
-
-  /* ---------------------------------
-     Copy email
-  ---------------------------------- */
-  var copyEmailButton = document.getElementById("copy-email");
-  if (copyEmailButton) {
-    copyEmailButton.addEventListener("click", function () {
-      var email = "myaseenliaqat94@gmail.com";
-      if (!navigator.clipboard) return;
-      navigator.clipboard.writeText(email).then(function () {
-        var original = copyEmailButton.textContent;
-        copyEmailButton.textContent = "Copied";
-        window.setTimeout(function () { copyEmailButton.textContent = original; }, 1200);
-      });
-    });
-  }
-
-  /* ---------------------------------
-     Footer year
-  ---------------------------------- */
-  var year = document.getElementById("year");
-  if (year) year.textContent = new Date().getFullYear();
+  var modal=document.getElementById("credential-modal"),modalImage=document.getElementById("credential-modal-image"),modalTitle=document.getElementById("credential-modal-title"),lastFocus=null;
+  function openModal(button){if(!modal||!modalImage)return;lastFocus=button;modalImage.src=button.dataset.credentialImage;modalImage.alt=button.dataset.credentialTitle||"Credential preview";if(modalTitle)modalTitle.textContent=button.dataset.credentialTitle||"Credential";modal.hidden=false;document.body.style.overflow="hidden";var close=modal.querySelector("[data-close-credential]");if(close)close.focus();}
+  function closeModal(){if(!modal)return;modal.hidden=true;document.body.style.overflow="";if(modalImage)modalImage.removeAttribute("src");if(lastFocus)lastFocus.focus();}
+  document.querySelectorAll("[data-credential-image]").forEach(function(b){b.addEventListener("click",function(){openModal(b);});});document.querySelectorAll("[data-close-credential]").forEach(function(b){b.addEventListener("click",closeModal);});document.addEventListener("keydown",function(e){if(e.key==="Escape"&&modal&&!modal.hidden)closeModal();});
 })();
