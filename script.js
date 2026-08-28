@@ -58,8 +58,12 @@
   }
   if(analyze)analyze.addEventListener("click",runMatcher);if(jd)jd.addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&e.key==="Enter")runMatcher();});if(clearJd)clearJd.addEventListener("click",function(){if(jd)jd.value="";if(results)results.hidden=true;if(empty)empty.hidden=false;});if(copy)copy.addEventListener("click",function(){if(!lastSummary)return;navigator.clipboard.writeText(lastSummary).then(function(){var old=copy.textContent;copy.textContent="Copied";setTimeout(function(){copy.textContent=old;},1000);}).catch(function(){});});
 
-  var modal=document.getElementById("credential-modal"),modalImage=document.getElementById("credential-modal-image"),modalTitle=document.getElementById("credential-modal-title"),lastFocus=null;
-  function openModal(button){if(!modal||!modalImage)return;lastFocus=button;modalImage.src=button.dataset.credentialImage;modalImage.alt=button.dataset.credentialTitle||"Credential preview";if(modalTitle)modalTitle.textContent=button.dataset.credentialTitle||"Credential";modal.hidden=false;document.body.style.overflow="hidden";var close=modal.querySelector("[data-close-credential]");if(close)close.focus();}
-  function closeModal(){if(!modal)return;modal.hidden=true;document.body.style.overflow="";if(modalImage)modalImage.removeAttribute("src");if(lastFocus)lastFocus.focus();}
-  document.querySelectorAll("[data-credential-image]").forEach(function(b){b.addEventListener("click",function(){openModal(b);});});document.querySelectorAll("[data-close-credential]").forEach(function(b){b.addEventListener("click",closeModal);});document.addEventListener("keydown",function(e){if(e.key==="Escape"&&modal&&!modal.hidden)closeModal();});
+  var credentialDialog=document.getElementById("credential-dialog"),credentialImage=document.getElementById("credential-dialog-image"),credentialTitle=document.getElementById("credential-dialog-title"),credentialClose=document.getElementById("credential-dialog-close");
+  function closeCredential(){if(credentialDialog&&credentialDialog.open)credentialDialog.close();}
+  document.querySelectorAll("[data-credential-image]").forEach(function(b){b.addEventListener("click",function(){if(!credentialDialog||!credentialImage)return;credentialImage.src=b.dataset.credentialImage;credentialImage.alt=b.dataset.credentialTitle||"Credential preview";if(credentialTitle)credentialTitle.textContent=b.dataset.credentialTitle||"Credential preview";if(typeof credentialDialog.showModal==="function")credentialDialog.showModal();});});
+  if(credentialClose)credentialClose.addEventListener("click",closeCredential);
+  if(credentialDialog)credentialDialog.addEventListener("click",function(e){if(e.target===credentialDialog)closeCredential();});
+
+  function openCaseFromHash(){if(!window.location.hash)return;var target=document.querySelector(window.location.hash);if(target&&target.tagName&&target.tagName.toLowerCase()==="details"){target.open=true;setTimeout(function(){target.scrollIntoView({behavior:reduced?"auto":"smooth",block:"start"});},30);}}
+  window.addEventListener("hashchange",openCaseFromHash);openCaseFromHash();
 })();
