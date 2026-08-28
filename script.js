@@ -23,17 +23,46 @@
   cards.forEach(function(card){card.addEventListener("pointermove",function(e){var r=card.getBoundingClientRect();card.style.setProperty("--mx",((e.clientX-r.left)/r.width*100)+"%");card.style.setProperty("--my",((e.clientY-r.top)/r.height*100)+"%");});});
 
   var skillButtons=Array.prototype.slice.call(document.querySelectorAll("[data-skill]"));
-  var filterStatus=document.getElementById("project-filter-status"),clearFilter=document.getElementById("clear-project-filter"),active=null;
+  var filterStatus=document.getElementById("project-filter-status"),skillFeedback=document.getElementById("skill-filter-feedback"),clearFilter=document.getElementById("clear-project-filter"),clearSkillFilterTop=document.getElementById("clear-skill-filter"),active=null;
   var aliases={
-    "pytorch":["pytorch","ml","ai"],"scikit-learn":["scikit-learn","ml"],"pandas-numpy":["pandas-numpy","data","ml"],"langchain":["langchain","rag"],"llamaindex":["llamaindex","rag"],"rag":["rag"],"chromadb":["chromadb","rag"],"sentence-transformers":["sentence-transformers","embeddings","rag"],"groq":["groq","ai"],"prompt-engineering":["prompt-engineering","ai"],"feature-engineering":["feature-engineering","ml"],"hyperparameter-tuning":["hyperparameter-tuning","ml"],"evaluation":["evaluation","ai"],"testing":["testing"],"guardrails":["guardrails","ai"],"experimental-design":["experimental-design","research"],
-    "python":["python"],"csharp":["csharp"],"fastapi":["fastapi"],"flask":["flask"],"aspnet":["aspnet"],"rest-apis":["rest-apis","backend"],
-    "sql":["sql","data"],"postgresql":["postgresql","data"],"sql-server":["sql-server","data"],"mysql":["mysql","data"],"gcp":["gcp","data"],"bigquery":["bigquery","data"],"dataflow":["dataflow","data"],"etl":["etl","data"],"tableau":["tableau","data"],"power-bi":["power-bi","data"],"dax":["dax","data"],
-    "react":["react","product"],"nextjs":["nextjs","product"],"flutter":["flutter","mobile"],"javascript":["javascript","product"],"typescript":["typescript","product"],"dart":["dart","mobile"],"html-css":["html-css","product"],"supabase":["supabase","product"],"firebase":["firebase","backend","product"],
+    "pytorch":["pytorch"],"scikit-learn":["scikit-learn"],"pandas-numpy":["pandas-numpy"],"langchain":["langchain"],"llamaindex":["llamaindex"],"rag":["rag"],"chromadb":["chromadb"],"sentence-transformers":["sentence-transformers"],"groq":["groq"],"prompt-engineering":["prompt-engineering"],"feature-engineering":["feature-engineering"],"hyperparameter-tuning":["hyperparameter-tuning"],"evaluation":["evaluation"],"testing":["testing"],"guardrails":["guardrails"],"experimental-design":["experimental-design"],
+    "python":["python"],"csharp":["csharp"],"fastapi":["fastapi"],"flask":["flask"],"aspnet":["aspnet"],"rest-apis":["rest-apis"],
+    "sql":["sql"],"postgresql":["postgresql"],"sql-server":["sql-server"],"mysql":["mysql"],"gcp":["gcp"],"bigquery":["bigquery"],"dataflow":["dataflow"],"etl":["etl"],"tableau":["tableau"],"power-bi":["power-bi"],"dax":["dax"],
+    "react":["react"],"nextjs":["nextjs"],"flutter":["flutter"],"javascript":["javascript"],"typescript":["typescript"],"dart":["dart"],"html-css":["html-css"],"supabase":["supabase"],"firebase":["firebase"],
     "git":["git"],"github":["github"],"cicd":["cicd"],"docker":["docker"],"agile":["agile"]
   };
-  function clearSkillFilter(){if(active)active.classList.remove("is-active");active=null;cards.forEach(function(c){c.classList.remove("is-match","is-dim");});if(filterStatus)filterStatus.querySelector("span").textContent="Showing selected work";if(clearFilter)clearFilter.hidden=true;}
-  function applySkill(button){var key=button.dataset.skill,list=aliases[key]||[key],matches=0;cards.forEach(function(c){var stack=(c.dataset.stack||"").toLowerCase().split(/\s+/),hit=list.some(function(a){return stack.indexOf(a)!==-1;});c.classList.toggle("is-match",hit);c.classList.toggle("is-dim",!hit);if(hit)matches++;});if(filterStatus)filterStatus.querySelector("span").textContent=matches?button.textContent.trim()+" → "+matches+" project"+(matches===1?"":"s"):button.textContent.trim()+" → not in this selected set";if(clearFilter)clearFilter.hidden=false;var ps=document.getElementById("projects");if(ps)ps.scrollIntoView({behavior:reduced?"auto":"smooth",block:"start"});}
-  skillButtons.forEach(function(b){b.addEventListener("click",function(){if(active===b){clearSkillFilter();return;}if(active)active.classList.remove("is-active");active=b;b.classList.add("is-active");applySkill(b);});});if(clearFilter)clearFilter.addEventListener("click",clearSkillFilter);
+  function clearSkillFilter(){
+    if(active)active.classList.remove("is-active");
+    active=null;
+    cards.forEach(function(c){c.classList.remove("is-match","is-dim","filter-pulse");c.removeAttribute("data-match-label");});
+    if(filterStatus)filterStatus.querySelector("span").textContent="Select a skill above to filter this work";
+    if(skillFeedback)skillFeedback.querySelector("span").textContent="Choose a skill to connect it to the featured work below.";
+    if(clearFilter)clearFilter.hidden=true;
+    if(clearSkillFilterTop)clearSkillFilterTop.hidden=true;
+  }
+  function applySkill(button){
+    var key=button.dataset.skill,list=aliases[key]||[key],matchedCards=[];
+    cards.forEach(function(c){
+      var stack=(c.dataset.stack||"").toLowerCase().split(/\s+/),hit=list.some(function(a){return stack.indexOf(a)!==-1;});
+      c.classList.toggle("is-match",hit);
+      c.classList.toggle("is-dim",!hit);
+      c.classList.remove("filter-pulse");
+      if(hit){c.setAttribute("data-match-label",button.textContent.trim());matchedCards.push(c);}else{c.removeAttribute("data-match-label");}
+    });
+    var names=matchedCards.map(function(c){var h=c.querySelector("h3");return h?h.textContent.trim():"project";});
+    var message=matchedCards.length?button.textContent.trim()+" → "+names.join(" · "):button.textContent.trim()+" is part of my broader stack, but it is not represented in these four featured project cards.";
+    if(filterStatus){var status=filterStatus.querySelector("span");if(status)status.textContent=message;}
+    if(skillFeedback){var topStatus=skillFeedback.querySelector("span");if(topStatus)topStatus.textContent=message;}
+    if(clearFilter)clearFilter.hidden=false;
+    if(clearSkillFilterTop)clearSkillFilterTop.hidden=false;
+    if(matchedCards.length){
+      var first=matchedCards[0];
+      first.classList.add("filter-pulse");
+      window.setTimeout(function(){first.classList.remove("filter-pulse");},1200);
+      first.scrollIntoView({behavior:reduced?"auto":"smooth",block:"center"});
+    }
+  }
+  skillButtons.forEach(function(b){b.addEventListener("click",function(){if(active===b){clearSkillFilter();return;}if(active)active.classList.remove("is-active");active=b;b.classList.add("is-active");applySkill(b);});});if(clearFilter)clearFilter.addEventListener("click",clearSkillFilter);if(clearSkillFilterTop)clearSkillFilterTop.addEventListener("click",clearSkillFilter);
 
   var jd=document.getElementById("jd-input"),analyze=document.getElementById("analyze-jd"),clearJd=document.getElementById("clear-jd"),empty=document.getElementById("matcher-empty"),results=document.getElementById("matcher-results"),scoreEl=document.getElementById("match-score"),ring=document.getElementById("score-ring"),label=document.getElementById("match-label"),summary=document.getElementById("match-summary"),matched=document.getElementById("matched-skills"),missing=document.getElementById("missing-skills"),evidence=document.getElementById("evidence-list"),brief=document.getElementById("recruiter-brief-text"),warning=document.getElementById("experience-warning"),copy=document.getElementById("copy-summary");
   var PROFILE_YEARS=1.5,lastSummary="";
